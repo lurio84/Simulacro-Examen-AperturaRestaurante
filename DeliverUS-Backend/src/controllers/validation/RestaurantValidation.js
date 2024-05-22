@@ -1,6 +1,19 @@
 import { check } from 'express-validator'
 import { checkFileIsImage, checkFileMaxSize } from './FileValidationHelper.js'
+import { Restaurant } from '../../models/models.js'
 const maxFileSize = 2000000 // around 2Mb
+
+const checkRestaurantStatus = async (value, { req }) => {
+  try {
+    const restaurant = Restaurant.findByPk(req.params.restaurantId)
+    if (restaurant.status === 'closed' || restaurant.status === 'temporarily closed') {
+      return Promise.reject((new Error("You can't change the status if the restaurant is closed or temporarily closed")))
+    }
+    return Promise.resolve()
+  } catch (err) {
+    return Promise.reject(new Error(err))
+  }
+}
 
 const create = [
   check('name').exists().isString().isLength({ min: 1, max: 255 }).trim(),
@@ -27,6 +40,7 @@ const create = [
   }).withMessage('Maximum file size of ' + maxFileSize / 1000000 + 'MB')
 ]
 const update = [
+
   check('name').exists().isString().isLength({ min: 1, max: 255 }).trim(),
   check('description').optional({ nullable: true, checkFalsy: true }).isString().trim(),
   check('address').exists().isString().isLength({ min: 1, max: 255 }).trim(),
@@ -48,7 +62,8 @@ const update = [
   }).withMessage('Please upload an image with format (jpeg, png).'),
   check('logo').custom((value, { req }) => {
     return checkFileMaxSize(req, 'logo', maxFileSize)
-  }).withMessage('Maximum file size of ' + maxFileSize / 1000000 + 'MB')
+  }).withMessage('Maximum file size of ' + maxFileSize / 1000000 + 'MB'),
+  check('status').custom(checkRestaurantStatus)
 ]
 
 export { create, update }

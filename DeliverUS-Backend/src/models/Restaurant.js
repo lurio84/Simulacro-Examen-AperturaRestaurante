@@ -57,7 +57,8 @@ const loadModel = (sequelize, DataTypes) => {
         'offline',
         'closed',
         'temporarily closed'
-      ]
+      ],
+      defaultValue: 'offline'
     },
     restaurantCategoryId: {
       allowNull: false,
